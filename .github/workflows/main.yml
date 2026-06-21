@@ -1,4 +1,4 @@
-name: Unzip to Root
+name: Extract ZIP Files
 
 on:
   push:
@@ -14,13 +14,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Unzip file to root
+      - name: Find and extract ZIP files
         run: |
-          unzip -o your-file.zip -d .
-          rm your-file.zip
+          shopt -s globstar nullglob
+
+          found=false
+          for zip in **/*.zip; do
+            found=true
+            echo "Extracting $zip..."
+            unzip -o "$zip" -d .
+          done
+
+          if [ "$found" = false ]; then
+            echo "No ZIP files found."
+          fi
+
+      - name: Remove ZIP files (optional)
+        run: |
+          find . -type f -name "*.zip" -delete
 
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Automated: Unzip contents to root"
+          commit_message: "Automated: Extract ZIP files"
           file_pattern: "*"
