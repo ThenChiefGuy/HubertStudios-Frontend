@@ -1,4 +1,4 @@
-name: Extract ZIP Files
+name: Find and Unzip
 
 on:
   push:
@@ -7,34 +7,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  extract:
+  unzip-and-process:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Find and extract ZIP files
+      - name: Debug - List files before unzip
         run: |
-          shopt -s globstar nullglob
+          echo "=== Here is what is currently in the repo ==="
+          find . -maxdepth 3 -not -path '*/.*'
 
-          found=false
-          for zip in **/*.zip; do
-            found=true
-            echo "Extracting $zip..."
-            unzip -o "$zip" -d .
-          done
-
-          if [ "$found" = false ]; then
-            echo "No ZIP files found."
-          fi
-
-      - name: Remove ZIP files (optional)
+      - name: Find and unzip all zip files
         run: |
-          find . -type f -name "*.zip" -delete
+          # -iname makes the search case-insensitive (.zip and .ZIP)
+          # NOTE: If you want to flatten all files directly into the root (ignoring internal zip folders), 
+          # change "unzip -o" to "unzip -oj" below.
+          find . -type f -iname "*.zip" -exec unzip -o {} -d . \;
 
-      - name: Commit and push changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Automated: Extract ZIP files"
-          file_pattern: "*"
+      - name: Debug - List files after unzip
+        run: |
+          echo "=== Here is the root directory after unzipping ==="
+          ls -la
