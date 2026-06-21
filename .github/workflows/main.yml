@@ -1,0 +1,32 @@
+name: Unzip to Root
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Allows manual triggering from the Actions tab
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository so the runner can access your files
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Unzip the file directly into the root directory
+      - name: Unzip file to root
+        run: |
+          # Replace 'your-file.zip' with the actual path to your zip file
+          unzip -o your-file.zip -d .
+          
+          # Optional: Delete the original zip file if you don't want to commit it back
+          rm your-file.zip
+
+      # Step 3: Commit and push the extracted files back to the repository
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: Unzip contents to root"
+          file_pattern: '*' # Ensures all newly extracted files are tracked
+
