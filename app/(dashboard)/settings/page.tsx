@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { ShieldCheck, Mail, Fingerprint, Lock, CheckCircle2 } from "lucide-react"
+import { ShieldCheck, AlertCircle, Mail, Fingerprint, Lock, CheckCircle2 } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -211,10 +211,17 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-4 flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400">
-              <ShieldCheck className="size-4" />
-              All security layers are operational.
-            </div>
+            {securityItems.every((i) => i.ok) ? (
+              <div className="mt-4 flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400">
+                <ShieldCheck className="size-4" />
+                All security layers are operational.
+              </div>
+            ) : (
+              <div className="mt-4 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-400">
+                <AlertCircle className="size-4" />
+                One or more security layers are inactive.
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
