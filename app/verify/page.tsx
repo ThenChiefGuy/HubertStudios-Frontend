@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useRef, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { MailCheck, AlertCircle, Loader2 } from "lucide-react"
@@ -17,7 +17,25 @@ function VerifyForm() {
   const [digits, setDigits] = useState<string[]>(Array(LENGTH).fill(""))
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  // FIX: Guard against direct navigation to /verify without going through /login.
+  // The challenge cookie is HttpOnly so JS can't check it — use sessionStorage
+  // as a lightweight signal instead. The server also validates the cookie independently.
+  const [allowed, setAllowed] = useState(false)
   const inputs = useRef<Array<HTMLInputElement | null>>([])
+
+  useEffect(() => {
+    if (typeof sessionStorage === "undefined") {
+      // SSR guard — shouldn't happen in a client component but be safe
+      router.replace("/login")
+      return
+    }
+    const pending = sessionStorage.getItem("hs_pending_verify")
+    if (!pending) {
+      router.replace("/login")
+      return
+    }
+    setAllowed(true)
+  }, [router])
 
   const code = digits.join("")
 
@@ -59,6 +77,8 @@ function VerifyForm() {
     setLoading(true)
     try {
       await verifyCode(code)
+      // Clear the pending-verify flag — we're fully logged in now.
+      sessionStorage.removeItem("hs_pending_verify")
       router.push("/overview")
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.")
@@ -67,6 +87,16 @@ function VerifyForm() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Don't render the form until we've confirmed the user came through /login.
+  // The useEffect above handles the redirect if they didn't.
+  if (!allowed) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-background">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </main>
+    )
   }
 
   return (
