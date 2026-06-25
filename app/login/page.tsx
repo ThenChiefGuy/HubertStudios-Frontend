@@ -33,6 +33,11 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await login(email, password, turnstileToken)
+      // FIX: Mark that we legitimately came through /login so the /verify
+      // page can redirect away if someone navigates there directly.
+      // Can't check the HttpOnly challenge cookie from JS, so sessionStorage
+      // is the right tool here.
+      sessionStorage.setItem("hs_pending_verify", "1")
       router.push(`/verify?email=${encodeURIComponent(email)}`)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.")
